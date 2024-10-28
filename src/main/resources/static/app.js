@@ -19,51 +19,39 @@ var app = (function () {
         ctx.stroke();
     };
 
-    var connectAndSubscribe = function () {
-        console.info('Connecting to WS...');
-        var socket = new SockJS('/stompendpoint');
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, function (frame) {
-            console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/newpoint', function (eventbody) {
-                var pointData = JSON.parse(eventbody.body);
-                var receivedPoint = new Point(pointData.x, pointData.y);
-                addPointToCanvas(receivedPoint);
-            });
-        });
-    };
-
     return {
-        init: function () {
-            connectAndSubscribe();
+        connect: function (id) {
+            console.info('Connecting to WS...');
+            var socket = new SockJS('/stompendpoint');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                // Suscribirse a un tópico dinámico basado en el ID ingresado
+                stompClient.subscribe('/topic/newpoint.' + id, function (eventbody) {
+                    var pointData = JSON.parse(eventbody.body);
+                    var receivedPoint = new Point(pointData.x, pointData.y);
+                    addPointToCanvas(receivedPoint);
+                });
+            });
         },
 
-        publishPoint: function (px, py) {
+        publishPoint: function (px, py, id) {
+            if (stompClient === null) {
+                console.warn("STOMP client is not connected. Unable to publish point.");
+                return; // Salir si no está conectado
+            }
             var pt = new Point(px, py);
             console.info("Publishing point at " + pt.x + ", " + pt.y);
             addPointToCanvas(pt);
-            stompClient.send("/topic/newpoint", {}, JSON.stringify(pt));
+            stompClient.send("/topic/newpoint." + id, {}, JSON.stringify(pt)); // Cambié a pt.y para usar el ID
         },
 
         disconnect: function () {
             if (stompClient !== null) {
                 stompClient.disconnect();
+                stompClient = null; // Limpiar la referencia después de desconectar
             }
             console.log("Disconnected");
         }
     };
 })();
-
-// Espera a que la página cargue y configura el botón de publicación de puntos
-window.onload = function () {
-    app.init();
-    document.querySelector("button").onclick = function () {
-        var x = document.getElementById("x").value;
-        var y = document.getElementById("y").value;
-        if (x && y) {
-            app.publishPoint(parseInt(x), parseInt(y));
-        } else {
-            alert("Por favor, ingrese valores válidos para X y Y.");
-        }
-    };
-};

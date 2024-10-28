@@ -1,20 +1,4 @@
 <!DOCTYPE html>
-<!--
-Copyright (C) 2016 Pivotal Software, Inc.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
--->
 <html>
 <head>
     <title>Collab Paint</title>
@@ -26,23 +10,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <script src="/app.js"></script>
 </head>
 
-<body onload="app.init()">
-    X: <input id="x" type="number" required />
-    Y: <input id="y" type="number" required />
-    <button id="sendPointButton">Send point</button>
-    <canvas id="canvas" width="800" height="600"></canvas>
+<body>
+    <label for="identifier">ID: </label>
+    <input id="identifier" type="number" required />
+    <button id="connectButton">Conectarse</button>
+    
+    <canvas id="canvas" width="800" height="600" style="border:1px solid black;"></canvas>
 
     <script>
-        document.getElementById("sendPointButton").onclick = function () {
-            var x = document.getElementById("x").value;
-            var y = document.getElementById("y").value;
-
-            if (x && y) {
-                app.publishPoint(parseInt(x), parseInt(y));
+        document.getElementById("connectButton").onclick = function () {
+            var id = document.getElementById("identifier").value;
+            if (id) {
+                app.connect(id); // Aquí conectas con el ID
             } else {
-                alert("Por favor, ingrese valores válidos para X y Y.");
+                alert("Por favor, ingrese un identificador válido.");
             }
         };
+    
+        var canvas = document.getElementById("canvas");
+        canvas.addEventListener("click", function (event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            var id = document.getElementById("identifier").value; // Obtener el ID del campo
+    
+            if (id) {
+                app.publishPoint(x, y, id); // Publicar el punto con el ID
+            } else {
+                alert("Por favor, ingrese un identificador válido antes de dibujar.");
+            }
+        });
     </script>
+    
 </body>
 </html>
