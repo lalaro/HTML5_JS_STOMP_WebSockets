@@ -54,6 +54,7 @@ var app = (function () {
     };
 })();
 
+// Espera a que la página cargue y configura el botón de publicación de puntos
 window.onload = function () {
     app.init();
     document.querySelector("button").onclick = function () {
