@@ -27,22 +27,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </head>
 
 <body onload="app.init()">
-X: <input id="x" type="number" required />
-Y: <input id="y" type="number" required />
-<button id="sendPointButton">Send point</button>
-<canvas id="canvas" width="800" height="600"></canvas>
+    X: <input id="x" type="number" required />
+    Y: <input id="y" type="number" required />
+    <button id="sendPointButton">Send point</button>
+    <canvas id="canvas" width="800" height="600"></canvas>
 
-<script>
-    document.getElementById("sendPointButton").onclick = function () {
-        var x = document.getElementById("x").value;
-        var y = document.getElementById("y").value;
+    <script>
+        document.getElementById("sendPointButton").onclick = function () {
+            var x = document.getElementById("x").value;
+            var y = document.getElementById("y").value;
 
-        if (x && y) {
-            app.publishPoint(parseInt(x), parseInt(y));
-        } else {
-            alert("Por favor, ingrese valores válidos para X y Y.");
-        }
-    };
-</script>
+            if (x && y) {
+                app.publishPoint(parseInt(x), parseInt(y));
+            } else {
+                alert("Por favor, ingrese valores válidos para X y Y.");
+            }
+        };
+    </script>
 </body>
 </html>
