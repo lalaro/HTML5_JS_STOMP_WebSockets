@@ -21,7 +21,7 @@
         document.getElementById("connectButton").onclick = function () {
             var id = document.getElementById("identifier").value;
             if (id) {
-                app.connect(id); // Aquí conectas con el ID
+                app.connect(id); 
             } else {
                 alert("Por favor, ingrese un identificador válido.");
             }
@@ -33,7 +33,7 @@
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             
-            var id = document.getElementById("identifier").value; // Obtener el ID del campo
+            var id = document.getElementById("identifier").value; 
     
             if (id) {
                 app.publishPoint(x, y, id); // Publicar el punto con el ID

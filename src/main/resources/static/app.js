@@ -8,6 +8,7 @@ var app = (function () {
     }
 
     var stompClient = null;
+    var currentSubscription = null; // Para almacenar la suscripción activa
 
     var addPointToCanvas = function (point) {
         var canvas = document.getElementById("canvas");
@@ -26,30 +27,44 @@ var app = (function () {
             stompClient = Stomp.over(socket);
             stompClient.connect({}, function (frame) {
                 console.log('Connected: ' + frame);
-                // Suscribirse a un tópico dinámico basado en el ID ingresado
-                stompClient.subscribe('/topic/newpoint.' + id, function (eventbody) {
+                
+                // Si hay una suscripción activa, se desuscribe antes de crear una nueva
+                if (currentSubscription !== null) {
+                    currentSubscription.unsubscribe();
+                    console.info("Unsubscribed from previous topic.");
+                }
+                
+                currentSubscription = stompClient.subscribe('/topic/newpoint.' + id, function (eventbody) {
                     var pointData = JSON.parse(eventbody.body);
                     var receivedPoint = new Point(pointData.x, pointData.y);
                     addPointToCanvas(receivedPoint);
                 });
+
+                console.info("Subscribed to /topic/newpoint." + id);
             });
         },
 
         publishPoint: function (px, py, id) {
             if (stompClient === null) {
                 console.warn("STOMP client is not connected. Unable to publish point.");
-                return; // Salir si no está conectado
+                return; 
             }
             var pt = new Point(px, py);
             console.info("Publishing point at " + pt.x + ", " + pt.y);
             addPointToCanvas(pt);
-            stompClient.send("/topic/newpoint." + id, {}, JSON.stringify(pt)); // Cambié a pt.y para usar el ID
+            //stompClient.send("/topic/newpoint." + id, {}, JSON.stringify(pt)); //esto envia a topic/newpoint."algo" 
+            stompClient.send("/app/newpoint." + id, {}, JSON.stringify(pt));
+
         },
 
         disconnect: function () {
             if (stompClient !== null) {
+                if (currentSubscription !== null) {
+                    currentSubscription.unsubscribe();
+                    currentSubscription = null;
+                }
                 stompClient.disconnect();
-                stompClient = null; // Limpiar la referencia después de desconectar
+                stompClient = null; 
             }
             console.log("Disconnected");
         }
