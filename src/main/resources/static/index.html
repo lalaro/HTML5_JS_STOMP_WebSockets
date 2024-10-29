@@ -14,27 +14,27 @@
     <label for="identifier">ID: </label>
     <input id="identifier" type="number" required />
     <button id="connectButton">Conectarse</button>
-    
+
     <canvas id="canvas" width="800" height="600" style="border:1px solid black;"></canvas>
 
     <script>
         document.getElementById("connectButton").onclick = function () {
             var id = document.getElementById("identifier").value;
             if (id) {
-                app.connect(id); 
+                app.connect(id);
             } else {
                 alert("Por favor, ingrese un identificador válido.");
             }
         };
-    
+
         var canvas = document.getElementById("canvas");
         canvas.addEventListener("click", function (event) {
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            
-            var id = document.getElementById("identifier").value; 
-    
+
+            var id = document.getElementById("identifier").value;
+
             if (id) {
                 app.publishPoint(x, y, id); // Publicar el punto con el ID
             } else {
@@ -42,6 +42,6 @@
             }
         });
     </script>
-    
+
 </body>
 </html>
