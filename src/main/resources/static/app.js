@@ -16,7 +16,6 @@ var app = (function () {
     var stompClient = null;
     var currentPointSubscription = null; // Para la suscripción activa de puntos
     var currentPolygonSubscription = null; // Para la suscripción activa de polígonos
-    var pointsMap = New Map();
 
     var addPointToCanvas = function (point) {
         var canvas = document.getElementById("canvas");
@@ -64,24 +63,9 @@ var app = (function () {
                     var pointData = JSON.parse(eventbody.body);
                     var receivedPoint = new Point(pointData.x, pointData.y);
                     addPointToCanvas(receivedPoint);
-                    // Agregar el punto al mapa
-                    if (!pointsMap.has(id)) {
-                        pointsMap.set(id, []);
-                    }
-                    pointsMap.get(id).push(receivedPoint);
-
-                    // Verificar si se pueden formar suficientes puntos para un polígono
-                    if (pointsMap.get(id).length >= 3) {
-                        const polygonPoints = pointsMap.get(id).slice(); // Copia de los puntos
-                        const polygon = new Polygon(polygonPoints);
-                        addPolygonToCanvas(polygon);
-                        // Publicar el polígono
-                        stompClient.send("/app/newpolygon." + id, {}, JSON.stringify(polygon));
-                        // Limpiar puntos después de publicar
-                        pointsMap.set(id, []);
-                    }
                 });
                 console.info("Subscribed to /topic/newpoint." + id);
+
 
                 if (currentPolygonSubscription !== null) {
                     currentPolygonSubscription.unsubscribe();
