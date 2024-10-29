@@ -31,6 +31,22 @@ public class STOMPMessagesHandler {
         msgt.convertAndSend("/topic/newpoint." + numdibujo, pt);
     }
 
+    private void checkAndPublishPolygon(String numdibujo) {
+        lock.lock();
+        try {
+            List<Point> points = pointsMap.get(numdibujo);
+            if (points != null && points.size() >= 3) {
+                // Crear un polígono y publicarlo
+                Polygon polygon = new Polygon(new ArrayList<>(points));
+                msgt.convertAndSend("/topic/newpolygon." + numdibujo, polygon);
+                // Limpiar los puntos después de publicar el polígono
+                points.clear();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
     @MessageMapping("/newpolygon.{numdibujo}")
     @SendTo("/topic/newpolygon.{numdibujo}")
     public Polygon handlePolygon(Polygon polygon) {
