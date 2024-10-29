@@ -7,8 +7,15 @@ var app = (function () {
         }
     }
 
+    class Polygon {
+        constructor(points) {
+            this.points = points; // Array de objetos Point
+        }
+    }
+
     var stompClient = null;
-    var currentSubscription = null; // Para almacenar la suscripción activa
+    var currentPointSubscription = null; // Para la suscripción activa de puntos
+    var currentPolygonSubscription = null; // Para la suscripción activa de polígonos
 
     var addPointToCanvas = function (point) {
         var canvas = document.getElementById("canvas");
@@ -20,6 +27,25 @@ var app = (function () {
         ctx.stroke();
     };
 
+    var addPolygonToCanvas = function (polygon) {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        ctx.beginPath();
+
+        ctx.moveTo(polygon.points[0].x, polygon.points[0].y);
+        polygon.points.forEach((point, index) => {
+            if (index > 0) {
+                ctx.lineTo(point.x, point.y);
+            }
+        });
+
+        // Cerrar el polígono
+        ctx.closePath();
+        ctx.fillStyle = "blue";
+        ctx.fill();
+        ctx.stroke();
+    };
+
     return {
         connect: function (id) {
             console.info('Connecting to WS...');
@@ -27,44 +53,68 @@ var app = (function () {
             stompClient = Stomp.over(socket);
             stompClient.connect({}, function (frame) {
                 console.log('Connected: ' + frame);
-                
-                // Si hay una suscripción activa, se desuscribe antes de crear una nueva
-                if (currentSubscription !== null) {
-                    currentSubscription.unsubscribe();
-                    console.info("Unsubscribed from previous topic.");
+
+                if (currentPointSubscription !== null) {
+                    currentPointSubscription.unsubscribe();
+                    console.info("Unsubscribed from previous point topic.");
                 }
-                
-                currentSubscription = stompClient.subscribe('/topic/newpoint.' + id, function (eventbody) {
+
+                currentPointSubscription = stompClient.subscribe('/topic/newpoint.' + id, function (eventbody) {
                     var pointData = JSON.parse(eventbody.body);
                     var receivedPoint = new Point(pointData.x, pointData.y);
                     addPointToCanvas(receivedPoint);
                 });
-
                 console.info("Subscribed to /topic/newpoint." + id);
+
+
+                if (currentPolygonSubscription !== null) {
+                    currentPolygonSubscription.unsubscribe();
+                    console.info("Unsubscribed from previous polygon topic.");
+                }
+
+                currentPolygonSubscription = stompClient.subscribe('/topic/newpolygon.' + id, function (eventbody) {
+                    var polygonData = JSON.parse(eventbody.body);
+                    var points = polygonData.points.map(p => new Point(p.x, p.y));
+                    var receivedPolygon = new Polygon(points);
+                    addPolygonToCanvas(receivedPolygon);
+                });
+                console.info("Subscribed to /topic/newpolygon." + id);
             });
         },
 
         publishPoint: function (px, py, id) {
             if (stompClient === null) {
                 console.warn("STOMP client is not connected. Unable to publish point.");
-                return; 
+                return;
             }
             var pt = new Point(px, py);
             console.info("Publishing point at " + pt.x + ", " + pt.y);
             addPointToCanvas(pt);
-            //stompClient.send("/topic/newpoint." + id, {}, JSON.stringify(pt)); //esto envia a topic/newpoint."algo" 
             stompClient.send("/app/newpoint." + id, {}, JSON.stringify(pt));
+        },
 
+        publishPolygon: function (points, id) {
+            if (stompClient === null) {
+                console.warn("STOMP client is not connected. Unable to publish polygon.");
+                return;
+            }
+            var polygon = { points: points };
+            console.info("Publishing polygon with " + points.length + " points.");
+            stompClient.send("/app/newpolygon." + id, {}, JSON.stringify(polygon));
         },
 
         disconnect: function () {
             if (stompClient !== null) {
-                if (currentSubscription !== null) {
-                    currentSubscription.unsubscribe();
-                    currentSubscription = null;
+                if (currentPointSubscription !== null) {
+                    currentPointSubscription.unsubscribe();
+                    currentPointSubscription = null;
+                }
+                if (currentPolygonSubscription !== null) {
+                    currentPolygonSubscription.unsubscribe();
+                    currentPolygonSubscription = null;
                 }
                 stompClient.disconnect();
-                stompClient = null; 
+                stompClient = null;
             }
             console.log("Disconnected");
         }

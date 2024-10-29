@@ -1,11 +1,15 @@
+package edu.eci.arsw.collabpaint;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import edu.eci.arsw.collabpaint.model.Point; // Ajusta esta ruta según la ubicación real de Point
+import edu.eci.arsw.collabpaint.model.Polygon;
 
 @Controller
 public class STOMPMessagesHandler {
@@ -26,4 +30,11 @@ public class STOMPMessagesHandler {
         // Reenviar el punto al tópico al que están suscritos los clientes
         msgt.convertAndSend("/topic/newpoint." + numdibujo, pt);
     }
+
+    @MessageMapping("/newpolygon.{numdibujo}")
+    @SendTo("/topic/newpolygon.{numdibujo}")
+    public Polygon handlePolygon(Polygon polygon) {
+        return polygon;  // Enviará el objeto Polygon a todos los clientes suscritos
+    }
+
 }
