@@ -33,7 +33,7 @@ public class STOMPMessagesHandler {
         synchronized (points) {
             points.add(pt);
             msgt.convertAndSend("/topic/newpoint." + numdibujo, pt);
-            if (points.size() >= 3) {
+            if (points.size() >= 4) {
                 Polygon polygon = new Polygon(new ArrayList<>(points));  // Crear el polígono
                 points.clear();
                 msgt.convertAndSend("/topic/newpolygon." + numdibujo, polygon);
